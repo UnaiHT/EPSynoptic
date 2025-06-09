@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.DataContext;
+using DataAccess.Repositories;
+using Presentation.ActionFilters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<FileDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<FileRepository>();
+builder.Services.AddScoped<DownloadActionFilter>();
+
 
 var app = builder.Build();
 

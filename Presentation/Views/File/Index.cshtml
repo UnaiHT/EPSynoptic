@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Domain.Models.File>
+﻿@model List<FileViewModel>
 
 @{
     ViewData["Title"] = "Index";
@@ -15,6 +15,7 @@
                 
                     <div class="card-body">
                         <h5 class="card-title">@file.Title&nbsp</h5>
+                        <p class="card-body">Owner : @file.OwnerName</p>
                         <div class="mt-3">
                             <a href="/File/Download/@file.Id" class="btn btn-primary">Download</a>
                         
