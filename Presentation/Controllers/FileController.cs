@@ -3,13 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using File = Domain.Models.File;
 using DataAccess.Repositories;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace Presentation.Controllers
 {
     public class FileController : Controller
     {
-        // GET: FileController
-        public ActionResult Index([FromServices] FileRepository fileRepository)
+        private readonly IWebHostEnvironment _env;
+        public FileController(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+            // GET: FileController
+            public ActionResult Index([FromServices] FileRepository fileRepository)
         {
 
             if (User.Identity.IsAuthenticated)
@@ -46,11 +52,16 @@ namespace Presentation.Controllers
 
         // POST: FileController/Create
         [HttpPost]
-        public ActionResult Add(File file, [FromServices] FileRepository fileRepository)
+        public ActionResult Add(IFormFile f, File file, [FromServices] FileRepository fileRepository)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && (f != null || f.Length != 0))
             {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                file.OwnerId = userId;
+
+                file.Filename= Guid.NewGuid().ToString() + Path.GetExtension(f.FileName);
                 fileRepository.AddFile(file);
+
                 TempData["message"] = "File was uploaded successfully";
 
                 return RedirectToAction("Index");
@@ -64,46 +75,27 @@ namespace Presentation.Controllers
             return View(myModel);
         }
 
-        // GET: FileController/Edit/5
-        public ActionResult Edit(int id)
+        public IActionResult Download(int id, [FromServices] FileRepository fileRepository)
         {
-            return View();
+            var file = fileRepository.GetFiles().FirstOrDefault(f => f.Id == id);
+
+            if (file == null)
+            {
+                return NotFound();
+            }
+              
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
+            var filePath = Path.Combine(uploadsFolder, file.Filename);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound();
+            }
+                
+            var mimeType = "application/octet-stream";
+
+            return PhysicalFile(filePath, mimeType, file.Title + Path.GetExtension(file.Filename));
         }
 
-        // POST: FileController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: FileController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: FileController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }
