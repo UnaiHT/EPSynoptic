@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccess.DataContext;
+using File = Domain.Models.File;
 
 namespace DataAccess.Repositories
 {
@@ -16,6 +17,16 @@ namespace DataAccess.Repositories
             _fileContext = fileContext;
         }
 
-        
+        public IQueryable<File> GetFiles()
+        {
+            return _fileContext.Files;
+        }
+
+        public void AddFile(File f)
+        {
+            f.Date = DateTime.Now;
+            _fileContext.Files.Add(f);
+            _fileContext.SaveChanges();
+        }
     }
 }
